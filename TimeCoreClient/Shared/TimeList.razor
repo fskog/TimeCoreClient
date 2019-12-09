@@ -1,0 +1,94 @@
+﻿@inject AppState AppState;
+@implements IDisposable
+
+@if (timeEntries != null && timeEntries.Any())
+{
+    <div class="time-list">
+        <table class="time-table table table-dark">
+            <thead>
+                <tr>
+                    <th scope="col">Description</th>
+                    <th scope="col">Elapsed</th>
+                    <th scope="col">Started</th>
+                    <th scope="col">Stopped</th>
+                    <th scope="col"><i class="fas fa-info-circle"></i></th>
+                    @*<th scope="col">Id</th>*@
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (TimeEntry Time in timeEntries)
+                {
+                    <tr>
+                        <td class="time-table__description">@Time.Title</td>
+                        <td class="time-table__elapsed">@Time.ElapsedString</td>
+                        <td class="time-table__date"><div data-tooltip="@Time.StartTime">@Time.StartTimeString</div></td>
+                        <td class="time-table__date"><div data-tooltip="@Time.EndTime">@Time.EndTimeString</div></td>
+                        <td class="time-table__info">
+                            <div data-tooltip="@($"[{Time.Title}], [Start: {Time.StartTime}], [End: {Time.EndTime}], [Id: {Time.SystemId}]")">
+                                <i class="fas fa-info-circle"></i>
+                            </div>
+
+
+
+                            @*<span>
+                                    <abbr title=" @Time.Title\nStart: @Time.StartTime\nEnd: @Time.EndTime\nId: @Time.SystemId">
+                                        <i class="fas fa-info-circle"></i>
+                                    </abbr>
+                                </span>*@
+                            @*<div class="tooltip">
+                                    Hover over me
+                                    <i class="fas fa-info-circle"></i>
+                                    <div class="tooltiptext">
+                                        <ul>
+                                            <li>@Time.Title</li>
+                                            <li>Start: @Time.StartTime</li>
+                                            <li>End: @Time.EndTime</li>
+                                            <li>Id: @Time.SystemId</li>
+                                        </ul>
+                                    </div>
+                                    <span>
+                                        @Time.Title<br />
+                                        Start: @Time.StartTime<br />
+                                        End: @Time.EndTime<br />
+                                        Id: @Time.SystemId<br />
+                                    </span>
+                                </div>*@
+                        </td>
+                        @*<td>@Time.SystemId</td>*@
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+
+    [Parameter] public DateTime ListIntervalStart { get; set; }
+    [Parameter] public DateTime ListIntervalEnd { get; set; }
+    private List<TimeEntry> timeEntries = new List<TimeEntry>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (ListIntervalStart != null && ListIntervalStart != default(DateTime)
+            && ListIntervalEnd != null && ListIntervalEnd != default(DateTime))
+        {
+            Console.WriteLine($"TimeList OnInit: Getting list with interval {ListIntervalStart} to {ListIntervalEnd}.");
+            var times = await AppState.GetTimeEntries();
+            timeEntries = times.Where(x => x.StartTime > ListIntervalStart && x.EndTime < ListIntervalEnd).OrderByDescending(t => t.StartTime).ToList();
+        }
+        else
+        {
+            Console.WriteLine("TimeList OnInit: Getting list without interval.");
+            var times = await AppState.GetTimeEntries();
+            timeEntries = times.OrderByDescending(t => t.StartTime).ToList();
+        }
+
+        AppState.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        AppState.OnChange -= StateHasChanged;
+    }
+}

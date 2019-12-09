@@ -1,0 +1,22 @@
+﻿@page "/"
+@inject AppState AppState;
+
+<Timer></Timer>
+
+<TimeList></TimeList>
+<inpt type="button" @onclick=AddTestEntry class="btn btn-primary">Add test time</inpt>
+
+
+@code {
+    TimeCoreClient.TimeEntry TestTime;
+
+    public void AddTestEntry()
+    {
+        AppState.AddOrUpdateTime(new TimeCoreClient.TimeEntry()
+        {
+            Title = "Test time",
+            StartTime = DateTime.Now,
+            EndTime = DateTime.Now
+        });
+    }
+}
